@@ -18,10 +18,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 #WORD2VEC
 from gensim.models import Word2Vec 
 import numpy as np
-model2 = Word2Vec.load('GoogleNews-vectors-negative300.bin')
+"""model2 = Word2Vec.load('GoogleNews-vectors-negative300.bin')
 import gensim.models.keyedvectors as word2vec
 model = word2vec.load_word2vec_format('GoogleNews-vectors-negative300.bin',binary = True)
-
+"""
 
 from collections import Counter
 import itertools
@@ -33,7 +33,7 @@ def map_word_frequency(document):
     return Counter(itertools.chain(*document))
 
 
-def get_sif_feature_vectors(sentence1, sentence2, word_emb_model=model2):
+def get_sif_feature_vectors(sentence1, sentence2, word_emb_model=""):
     print("pasa")
     sentence1 = [token for token in sentence1.split() if token in word_emb_model.wv.vocab]
     sentence2 = [token for token in sentence2.split() if token in word_emb_model.wv.vocab]
@@ -88,7 +88,6 @@ def lematizacion(corpus):
     ListLematizada= []
 
     for palabra in palabras:
-        print(palabra, " : ",lematizer.lemmatize(palabra))
         ListLematizada.append(lematizer.lemmatize(palabra))
 
     return ListLematizada
