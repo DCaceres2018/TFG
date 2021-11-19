@@ -14,21 +14,16 @@ if __name__ == '__main__':
 
     doc = minidom.parse(ruta+"/test-unseen-answers/EM-inv1-45b.xml")
     question=doc.getElementsByTagName("questionText")[0]
-    print(question.firstChild.data)
     respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
     buena=respuestaBuena.firstChild.data
     respuestasDadas= doc.getElementsByTagName("studentAnswer")
     respuestas=[]
     for i in range(len(respuestasDadas)):
         respuestas.append(respuestasDadas[i].firstChild.data)
-    print(respuestas)
 
     respuestas.append(buena)
     sentence= f.pre_process(buena)
-    print(buena)
-    print(sentence)
     sentenceBuenaLematizada = f.lematizacion(sentence)
-    print(sentenceBuenaLematizada)
     respuestasPre=[]
     respuestasLem=[]
     for i in respuestas:
@@ -39,15 +34,18 @@ if __name__ == '__main__':
 
 
     a=f.featureExtraction(respuestas)
-    print(a)
     for i in a:
+        print("Respuesta")
+        print(i)
+        print("Respuesta Correcta")
+        print(a[-1])
         b = f.get_cosine_similarity(i, a[-1])
         print(b)
 
 
-    corpus=["A girl is styling her hair.","A girl is styling her hair."]
+    """corpus=["A girl is styling her hair.","A girl is styling her hair."]
     list=f.featureExtraction(corpus)
     print(list)
     print()
     d=f.get_sif_feature_vectors(corpus[0],corpus[1])
-    print(d)
+    print(d)"""
