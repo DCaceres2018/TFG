@@ -1,5 +1,5 @@
 import nltk
-from module import filtrador_métodos as f
+from module import word2vecEmbeding as f
 import os
 from xml.dom import minidom
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ def pruebas2():
     a=list.pop()
     print(a)
 
-def pruebas():
+def pruebasWord2Bec():
     ruta = "./sciEntsBank"
 
 
@@ -30,7 +30,7 @@ def pruebas():
 
 
 
-def run(num : int=0.4):
+def runWord2Vec(num : int=0.4):
     cota=num
     listaNumeros=[]
     ValoresRespuestas=[]
