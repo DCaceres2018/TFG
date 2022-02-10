@@ -1,5 +1,10 @@
 import nltk
+import numpy as np
+from sklearn.datasets import load_digits
+
 from module import word2vecEmbeding as f
+
+from module import tSNE_Embeding as tsne
 import os
 from xml.dom import minidom
 import matplotlib.pyplot as plt
@@ -68,6 +73,7 @@ def runWord2Vec(num : int=0.4):
                 respuestasLem.append(f.lematizacion(i))
             respDadas=[]
             respDadas = f.featureExtraction(respuestas)
+            print(respDadas)
             for i in respDadas:
                     b = f.get_cosine_similarity(i, respDadas[-1])
                     listaNumeros.append(b)
@@ -91,9 +97,36 @@ def runWord2Vec(num : int=0.4):
 
     return len(listaAciertos)
 
+def runTSNE(x):
+    listaNumeros = []
+    ValoresRespuestas = []
+    fichero = "./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml"
+
+    doc = minidom.parse(fichero)
+
+    question = doc.getElementsByTagName("questionText")[0]
+    respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
+    buena = respuestaBuena.firstChild.data
+    respuestasDadas = doc.getElementsByTagName("studentAnswer")
+    respuestas = []
+
+    for i in respuestasDadas:
+        ValoresRespuestas.append(i.getAttribute('accuracy'))
+    ValoresRespuestas.append('base')
+    for i in range(len(respuestasDadas)):
+        respuestas.append(respuestasDadas[i].firstChild.data)
+    respuestas.append(buena)
+
+    respuestasPre = []
+    respuestasLem = []
+    for i in respuestas:
+        respuestasPre.append(f.pre_process(i))
+    for i in respuestasPre:
+        respuestasLem.append(f.lematizacion(i))
+    respDadas = []
+    respDadas = f.featureExtraction(respuestas)
+    print(respDadas)
+    tsne.fit(respDadas)
+
 if __name__ == '__main__':
-    aciertos= []
-    for i in range(10):
-        cota=0.1 * i
-        aciertos.append(run(cota))
-    print(aciertos)
+        runTSNE(0)
