@@ -724,30 +724,3 @@ if __name__ == '__main__':
     # listaAc,listaErr= runFLAIRalgoritmoEntero()
     #runFLAIRalgoritmoEntero()
     runFeaturealgoritmoEntero()
-    """print("Curie")
-    listaAc, listaErr = runBabbagealgoritmoEntero("curie")
-    EstadisticosDeTodoLista(listaAc, listaErr)
-    print("Ada")
-    listaAc, listaErr = runBabbagealgoritmoEntero("ada")
-    EstadisticosDeTodoLista(listaAc, listaErr)"""
-    """fallosBabbge=0
-        fallosDavinci=0
-        fallosAda=0
-        fallosCurie=0
-        contBabbge=0
-        fallosBabbge=0
-        listaDeFallos=[]
-        fallosBabbgeSalida, contSalida = runEstadisticosConBabbagge("./sciEntsBank/test-unseen-answers/EM-post-26.xml")
-        fallosBabbge += len(fallosBabbgeSalida)
-        contBabbge += contSalida
-        listaDeFallos.append(fallosBabbgeSalida)"""
-    """for i in archivos:
-            fallosBabbgeSalida,contSalida=runEstadisticosConBabbagge("./sciEntsBank/test-unseen-answers/EM-inv2-16b.xml")
-            fallosBabbge+=len(fallosBabbgeSalida)
-            contBabbge+=contSalida
-            listaDeFallos.append(fallosBabbgeSalida)"""
-    """fallosDavinci+=runEstadisticosConDavinvi(i)
-            fallosAda+=runEstadisticosConAda(i)
-            fallosCurie+=runEstadisticosConCurie(i)"""
-    """ print(listaDeFallos)
-        print(str(fallosBabbge)+" "+str(contBabbge))"""
