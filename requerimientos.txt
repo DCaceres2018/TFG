@@ -3,3 +3,4 @@ python -m nltk.downloader all
 pip install unidecode
 pip install gensim
 pip install scikit_learn
+pip install seaborn
