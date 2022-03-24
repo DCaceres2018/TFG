@@ -21,7 +21,6 @@ sns.set(rc={'figure.figsize': (11.7, 8.27)})
 palette = sns.color_palette("bright", 10)
 import openai, numpy as np
 
-openai.api_key = "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"
 
 from scipy.spatial.distance import cityblock
 from scipy.spatial.distance import cosine
