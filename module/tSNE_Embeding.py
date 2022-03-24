@@ -18,7 +18,13 @@ MACHINE_EPSILON = np.finfo(np.double).eps
 n_components = 2
 perplexity = 30
 
-
+def fitTrucado(X):
+    n_samples = X.shape[0]
+    # Compute euclidean distance
+    distances = pairwise_distances(X, metric='euclidean', squared=True)
+    P = _joint_probabilities(distances=distances, desired_perplexity=perplexity, verbose=False)
+    X_embedded = 1e-4 * np.random.mtrand._rand.randn(n_samples, n_components).astype(np.float32)
+    print(X_embedded)
 def fit(X):
     n_samples = X.shape[0]
 
@@ -41,13 +47,20 @@ def fit(X):
 
 def _tsne(P, degrees_of_freedom, n_samples, X_embedded):
     params = X_embedded.ravel()
+    print("parametros")
+    print(params)
+
     obj_func = _kl_divergence
+
     params = _gradient_descent(obj_func, params, [P, degrees_of_freedom, n_samples, n_components])
+    print(params)
+
     X_embedded = params.reshape(n_samples, n_components)
     return X_embedded
 
 
 def _kl_divergence(params, P, degrees_of_freedom, n_samples, n_components):
+    print("entro")
     X_embedded = params.reshape(n_samples, n_components)
 
     dist = pdist(X_embedded, "sqeuclidean")
@@ -85,32 +98,29 @@ def _gradient_descent(obj_func, p0, args, it=0, n_iter=1000,
     for i in range(it, n_iter):
         error, grad = obj_func(p, *args)
         grad_norm = linalg.norm(grad)
-    inc = update * grad < 0.0
-    dec = np.invert(inc)
-    gains[inc] += 0.2
-    gains[dec] *= 0.8
-    np.clip(gains, min_gain, np.inf, out=gains)
-    grad *= gains
-    update = momentum * update - learning_rate * grad
-    p += update
-    print("[t-SNE] Iteration %d: error = %.7f,"
-                     " gradient norm = %.7f"
-                     % (i + 1, error, grad_norm))
+        inc = update * grad < 0.0
+        dec = np.invert(inc)
+        gains[inc] += 0.2
+        gains[dec] *= 0.8
+        np.clip(gains, min_gain, np.inf, out=gains)
+        grad *= gains
+        update = momentum * update - learning_rate * grad
+        p += update
+        print("[t-SNE] Iteration %d: error = %.7f,"
+                         " gradient norm = %.7f"
+                         % (i + 1, error, grad_norm))
 
-    if error < best_error:
-        best_error = error
-        best_iter = i
-    elif i - best_iter > n_iter_without_progress:
-        return RuntimeError
+        if error < best_error:
+            best_error = error
+            best_iter = i
+        elif i - best_iter > n_iter_without_progress:
+            break
 
-    if grad_norm <= min_grad_norm:
-        return RuntimeError
+        if grad_norm <= min_grad_norm:
+            break
 
     return p
 
 def tsne_fit(x):
-    tsne=TSNE()
-    X_embedded =tsne.fit_transform(x)
-    print(X_embedded)
-    X,y=load_digits(return_X_y=True)
-    sns.scatterplot(X_embedded[:, 0], X_embedded[:, 1], hue=y, legend='full', palette=palette)
+    X_embedded = TSNE(n_components=3,init = 'random').fit_transform(x)
+    return X_embedded
