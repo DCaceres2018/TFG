@@ -791,6 +791,7 @@ if __name__ == '__main__':
     # runEstadisticosConFlair("./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml")
     # listaAc,listaErr= runFLAIRalgoritmoEntero()
     # runFLAIRalgoritmoEntero()
+
     print("DOMAINS")
     #runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions")
     runFLAIRalgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains")
