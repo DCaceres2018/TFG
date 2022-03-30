@@ -19,9 +19,9 @@ X, y = load_digits(return_X_y=True)
 
 sns.set(rc={'figure.figsize': (11.7, 8.27)})
 palette = sns.color_palette("bright", 10)
-import openai, numpy as np
+import openai
 
-openai.api_key = "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"
+
 
 from scipy.spatial.distance import cityblock
 from scipy.spatial.distance import cosine
@@ -36,12 +36,15 @@ flair_embedding_beckward = FlairEmbeddings('news-backward')
 
 document_embedding = DocumentPoolEmbeddings([glove_embedding, flair_embedding_beckward, flair_embeding_foward])
 
+#BERT
+from sentence_transformers import SentenceTransformer
+sbert_model = SentenceTransformer('bert-base-nli-mean-tokens')
+
 
 def pruebas2():
     list = ['a', 'b', 'c']
     a = list.pop()
     print(a)
-
 
 def pruebasWord2Vec():
     ruta = "./sciEntsBank"
@@ -59,7 +62,6 @@ def pruebasWord2Vec():
     for i in range(len(respuestasDadas)):
         respuestas.append(respuestasDadas[i].firstChild.data)
     print(a)
-
 
 def runWord2Vec(num: int = 0.4):
     cota = num
@@ -122,7 +124,6 @@ def runWord2Vec(num: int = 0.4):
 
     return len(listaAciertos)
 
-
 def runTSNE():
     listaNumeros = []
     ValoresRespuestas = []
@@ -158,7 +159,6 @@ def runTSNE():
     plt.show()
     # sns.scatterplot(emb[:,0],emb[:,1], hue=y,legend='full',palette=palette)
 
-
 def runOpenai():
     ValoresRespuestas = []
     fichero = "./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml"
@@ -188,7 +188,6 @@ def runOpenai():
         vectorSimilitudes.append(np.dot(embBuena, embeddingX))
     for i in range(len(vectorSimilitudes)):
         print(vectorSimilitudes[i], ValoresRespuestas[i])
-
 
 def runTSNEopenai():
     listaNumeros = []
@@ -232,7 +231,6 @@ def runTSNEopenai():
         plt.plot(emb[i,0],emb[i,1],emb[i,2],color=list[i],marker='o')"""
     plt.show()
 
-
 def runPruebaProbabilidad():
     listaNumeros = []
     ValoresRespuestas = []
@@ -266,7 +264,6 @@ def runPruebaProbabilidad():
     """for i in range(len(emb)):
         plt.plot(emb[i,0],emb[i,1],color=list[i],marker='o')"""
     plt.show()
-
 
 def runPruebaProbabilidadConTruncatedSVD():
     listaNumeros = []
@@ -309,7 +306,6 @@ def runPruebaProbabilidadConTruncatedSVD():
     for i in range(len(emb)):
         plt.plot(emb[i,0],emb[i,1],color=list[i],marker='o')
     plt.show()"""
-
 
 def runEstadisticosConDavinvi(x,cota):
     ValoresRespuestas = []
@@ -359,7 +355,6 @@ def runEstadisticosConDavinvi(x,cota):
     # print("aciertos=" + str(len(listaAciertos)) + " errores=" + str(len(listaErrores)))
     return listaAciertos,listaErrores
 
-
 def runEstadisticosConCurie(x,cota):
     ValoresRespuestas = []
     fichero = x
@@ -402,7 +397,6 @@ def runEstadisticosConCurie(x,cota):
                 listaAciertos.append((valor, accuracy))
     # print("aciertos=" + str(len(listaAciertos)) + " errores=" + str(len(listaErrores)))
     return listaAciertos,listaErrores
-
 
 def runEstadisticosConAda(x,cota):
     ValoresRespuestas = []
@@ -536,6 +530,85 @@ def runBabbagealgoritmoEntero(nombre):
         ListaErroresTotal.append(listaErrores)
     return ListaAciertosTotal, ListaErroresTotal
 
+def extraerRespuestasBERT(ruta):
+    fichero = ruta
+    respuestasDadad=[]
+    ValoresRespuestas=[]
+    sentences = []
+    respuestas = []
+
+    doc = minidom.parse(fichero)
+
+    question = doc.getElementsByTagName("questionText")[0]
+    respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
+    buena = respuestaBuena.firstChild.data
+    respuestasDadas = doc.getElementsByTagName("studentAnswer")
+
+    respuestas.append(buena)
+
+    for i in respuestasDadas:
+        ValoresRespuestas.append(i.getAttribute('accuracy'))
+    for i in range(len(respuestasDadas)):
+        respuestas.append(respuestasDadas[i].firstChild.data)
+
+    respDadas = [f.pre_process(i) for i in respuestas]
+    sentences_embbeding= sbert_model.encode(respDadas)
+
+    return sentences_embbeding,ValoresRespuestas
+
+def runEstadisticosConBERT(ruta, cota):
+    respDadas,ValoresRespuestas=extraerRespuestasBERT(ruta)
+    FN = []
+    TP = []
+    FP = []
+    TN = []
+    cont = 0
+    buena=respDadas[0]
+    for i in respDadas:
+        if (cont != 0):
+            valor = 1 - cosine(buena, i)
+            if(valor<0):
+                print(valor)
+            accuracy=ValoresRespuestas[cont-1]
+            if valor > cota:
+                if accuracy == 'correct':
+                    TP.append(valor)
+                else:
+                    FP.append(valor)
+            else:
+                if accuracy == 'correct':
+                    FN.append(valor)
+                else:
+                    TN.append(valor)
+        cont += 1
+
+    return TP,TN,FP,FN
+
+def runBertlgoritmoEntero(RUTA):
+    archivos = []
+    a = RUTA
+    for x in os.listdir(a):
+        route = a + "/" + x
+        archivos.append(route)
+    ListaAciertosTotal=[]
+    ListaErroresTotal=[]
+    for j in range(11):
+        numErrores = 0
+        numAciertos = 0
+        FNL = 0
+        TPL = 0
+        FPL = 0
+        TNL= 0
+        cota = (j*0.1)
+        for i in archivos:
+            TP,TN,FP,FN = runEstadisticosConBERT(i, cota)
+            TPL+=(len(TP))
+            TNL+=(len(TN))
+            FPL+=(len(FP))
+            FNL+=(len(FN))
+        print("Con cota= " + str(cota) + " Aciertos= " + str(TPL + TNL) + " Errores= " + str(FPL + FNL) + " Total= " + str(FPL+ FNL+ TPL + TNL))
+        EstadisticosDeTodoLista(TPL,TNL,FPL,FNL,cota)
+
 def extraerRespuestasVEC(ruta):
     fichero = ruta
     respuestasDadad=[]
@@ -590,22 +663,22 @@ def runEstadisticosConFeature(ruta, cota):
 
     return TP,TN,FP,FN
 
-def runFeaturealgoritmoEntero():
+def runFeaturealgoritmoEntero(ruta):
     archivos = []
-    a = "./sciEntsBank/test-unseen-answers"
+    a = ruta
     for x in os.listdir(a):
         route = a + "/" + x
         archivos.append(route)
     ListaAciertosTotal=[]
     ListaErroresTotal=[]
-    for j in range(11):
+    for j in range(1):
         numErrores = 0
         numAciertos = 0
         FNL = 0
         TPL = 0
         FPL = 0
         TNL= 0
-        cota = (j*0.01)
+        cota = (j*00.1)
         for i in archivos:
             TP,TN,FP,FN = runEstadisticosConFeature(i, cota)
             TPL+=(len(TP))
@@ -632,18 +705,15 @@ def ExtraerRespuestasFlair(ruta):
         respuestas.append(respuestasDadas[i].firstChild.data)
 
     entrada = [f.pre_process(i) for i in respuestas]
-    entrada2 = [f.lematizacion(i) for i in entrada]
-
-    sentences = []
-    for i in entrada2:
-        word = ""
-        for j in i:
-            word = word + j
-            word += " "
-        frase = Sentence(word)
-        document_embedding.embed(frase)
-        b = frase.get_embedding()
-        sentences.append(b)
+    sentences=[]
+    for i in entrada:
+        if i != "":
+            frase = Sentence(i)
+            document_embedding.embed(frase)
+            b = frase.get_embedding()
+            sentences.append(b)
+        else:
+            sentences.append([])
     return sentences, ValoresRespuestas
 
 def runEstadisticosConFlair(ruta, cota):
@@ -673,15 +743,15 @@ def runEstadisticosConFlair(ruta, cota):
                 TN.append(valor)
     return TP,TN,FP,FN
 
-def runFLAIRalgoritmoEntero():
+def runFLAIRalgoritmoEntero(RUTA):
     archivos = []
-    a = "./sciEntsBank/test-unseen-answers"
+    a = RUTA
     for x in os.listdir(a):
         route = a + "/" + x
         archivos.append(route)
     ListaAciertosTotal=[]
     ListaErroresTotal=[]
-    for j in range(11):
+    for j in range(10):
         numErrores = 0
         numAciertos = 0
         FNL = 0
@@ -712,8 +782,6 @@ def EstadisticosDeTodoLista(TPL,TNL,FPL,FNL,cota):
         Accuracy=(TP+TN)/(TP+TN+FP+FN)
         print("Con cota= "+str(round(cota,2))+" .Precision= "+str(round(precision,3))+" Recall= "+str(round(recall,3))+" F1= "+str(round(f1,3))+" Accuracy= "+str(round(Accuracy,3)))
 
-
-
 if __name__ == '__main__':
     # runOpenai()
     # runTSNEopenai()
@@ -722,5 +790,10 @@ if __name__ == '__main__':
     # runPruebaProbabilidadConTruncatedSVD()
     # runEstadisticosConFlair("./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml")
     # listaAc,listaErr= runFLAIRalgoritmoEntero()
-    #runFLAIRalgoritmoEntero()
-    runFeaturealgoritmoEntero()
+    # runFLAIRalgoritmoEntero()
+    print("DOMAINS")
+    #runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions")
+    runFLAIRalgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains")
+    print("QUESTIONS")
+    runFLAIRalgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions")
+
