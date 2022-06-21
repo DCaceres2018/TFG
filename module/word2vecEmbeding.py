@@ -16,7 +16,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 #WORD2VEC
-from gensim.models import Word2Vec 
 import numpy as np
 """model2 = Word2Vec.load('GoogleNews-vectors-negative300.bin')
 import gensim.models.keyedvectors as word2vec
@@ -34,13 +33,11 @@ def map_word_frequency(document):
 
 
 def get_sif_feature_vectors(sentence1, sentence2, word_emb_model=""):
-    print("pasa")
     sentence1 = [token for token in sentence1.split() if token in word_emb_model.wv.vocab]
     sentence2 = [token for token in sentence2.split() if token in word_emb_model.wv.vocab]
     word_counts = map_word_frequency((sentence1 + sentence2))
     embedding_size = 300  # size of vectore in word embeddings
     a = 0.001
-    print(sentence1+" "+sentence2)
     sentence_set = []
     for sentence in [sentence1, sentence2]:
         vs = np.zeros(embedding_size)

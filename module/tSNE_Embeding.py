@@ -7,12 +7,7 @@ from sklearn.metrics import pairwise_distances
 from scipy.spatial.distance import squareform
 from sklearn.manifold import TSNE
 from matplotlib import pyplot as plt
-import seaborn as sns
 
-X,y=load_digits(return_X_y=True)
-
-sns.set(rc={'figure.figsize':(11.7,8.27)})
-palette = sns.color_palette("bright", 10)
 
 MACHINE_EPSILON = np.finfo(np.double).eps
 n_components = 2
