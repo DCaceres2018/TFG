@@ -10,6 +10,6 @@ Para ejecutar los algoritmos no supervisados:
   2. Elegir el algoritmo a ejecutar en el main. Hay 3 funciones por defectos (correspondiente a cada transformador de texto) que ejecutan todo el algoritmo.
   3. Ejecutar su método main. 
 
-Para ejecutar el algoritmo supervisado.
+Para ejecutar el algoritmo supervisado:
   1. Acceder al fichero module/BertSemanticDataGenerator.py 
   2. Ejecutar su método main.
