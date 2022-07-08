@@ -1,18 +1,10 @@
-import nltk
-import numpy as np
 import pandas as pd
 from sklearn.datasets import load_digits
-from scipy.spatial import distance
 from module import word2vecEmbeding as f
-from module import tSNE_Embeding as tsne
 import os
 from xml.dom import minidom
-import matplotlib.pyplot as plt
-from sklearn.decomposition import TruncatedSVD
 
 X, y = load_digits(return_X_y=True)
-
-import openai
 
 from scipy.spatial.distance import cosine
 # LIBRERIAS PARA FLAIR
@@ -46,13 +38,18 @@ from sklearn.metrics import classification_report
 
 
 def extraerRespuestasBERT(ruta):
+    """
+    Función para extraer las respuestas del fichero xml que queramos. Posteriormente se preprocesa y se transformará en un embedding con BERT.
+
+    :param ruta:  ruta al fichero del que extraer las respuestas
+    :return: lista de frases procesadas y transformadas junto a sus respectivos índices
+    """
     fichero = ruta
     ValoresRespuestas = []
     respuestas = []
 
     doc = minidom.parse(fichero)
 
-    question = doc.getElementsByTagName("questionText")[0]
     respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
     respuestaBuena = respuestaBuena.firstChild.data
     respuestasDadas = doc.getElementsByTagName("studentAnswer")
@@ -71,6 +68,13 @@ def extraerRespuestasBERT(ruta):
 
 
 def runEstadisticosConBERT(ruta, cota):
+    """
+    Función que procesa los embeddings obtenidos al extraer las frases del fichero.
+
+    :param ruta: ruta del fichero con el que trabajar
+    :param cota: valor umbral de similitud
+    :return: Listas de estadisticos.
+    """
     respDadas, ValoresRespuestas = extraerRespuestasBERT(ruta)
     FN = []
     TP = []
@@ -82,7 +86,7 @@ def runEstadisticosConBERT(ruta, cota):
         if cont != 0:
             valor = 1 - cosine(buena, i)
             if valor < 0:
-                print(valor)
+                exit()
             accuracy = ValoresRespuestas[cont - 1]
             if valor > cota:
                 if accuracy == 'correct':
@@ -100,6 +104,13 @@ def runEstadisticosConBERT(ruta, cota):
 
 
 def runEstadisticosConBERTopcion2(ruta, cota, expected: list, predicted: list):
+    """
+        Función alternativa que procesa los embeddings obtenidos al extraer las frases del fichero.
+
+        :param ruta: ruta del fichero con el que trabajar
+        :param cota: valor umbral de similitud
+        :return: Listas de estadisticos.
+        """
     respDadas, ValoresRespuestas = extraerRespuestasBERT(ruta)
 
     cont = 0
@@ -129,7 +140,13 @@ def runEstadisticosConBERTopcion2(ruta, cota, expected: list, predicted: list):
     return expected, predicted
 
 
-def runBertlgoritmoEntero(Ruta):
+def runBertalgoritmoEntero(Ruta):
+    """
+    Función que itera en todos los valores de umbrales para obtener los estadísticos de cada una y poder pintar la matriz de confusión
+    y hacer el classification report.
+    :param Ruta: ruta al fichero con el que queremos trabajar
+
+    """
     archivos = []
 
     for x in os.listdir(Ruta):
@@ -147,6 +164,14 @@ def runBertlgoritmoEntero(Ruta):
 
 
 def runBertlgoritmoEstadisticos(Ruta, cota, expected, predicted):
+    """
+    Función complementaria para la obtención de los estadísticos usando BERT.
+    :param Ruta: ruta al fichero con el que queremos trabajar.
+    :param cota: valor umbral de similitud.
+    :param expected: lista de los valores esperados.
+    :param predicted: lista de los valores predecidos.
+    :return: ambas listas ampliadas con los valores del nuevo fichero.
+    """
     archivos = []
 
     for x in os.listdir(Ruta):
@@ -160,7 +185,13 @@ def runBertlgoritmoEstadisticos(Ruta, cota, expected, predicted):
     return Expected, Predicted
 
 
-def extraerRespuestasVEC(ruta):
+def extraerRespuestasTF_IDF(ruta):
+    """
+        Función para extraer las respuestas del fichero xml que queramos. Posteriormente se preprocesa y se transformará en un embedding con TF_IDF.
+
+        :param ruta:  ruta al fichero del que extraer las respuestas
+        :return: lista de frases procesadas y transformadas junto a sus respectivos índices
+        """
     fichero = ruta
     ValoresRespuestas = []
     respuestas = []
@@ -182,8 +213,15 @@ def extraerRespuestasVEC(ruta):
     return respDadas, ValoresRespuestas
 
 
-def runEstadisticosConFeature(ruta, cota):
-    respDadas, ValoresRespuestas = extraerRespuestasVEC(ruta)
+def runEstadisticosConTF_IDF(ruta, cota):
+    """
+       Función que procesa los embeddings obtenidos al extraer las frases del fichero.
+
+       :param ruta: ruta del fichero con el que trabajar
+       :param cota: valor umbral de similitud
+       :return: Listas de estadisticos.
+       """
+    respDadas, ValoresRespuestas = extraerRespuestasTF_IDF(ruta)
     FN = []
     TP = []
     FP = []
@@ -211,7 +249,13 @@ def runEstadisticosConFeature(ruta, cota):
     return TP, TN, FP, FN
 
 
-def runFeaturealgoritmoEntero(ruta):
+def runTF_IDFlAlgoritmoEntero(ruta):
+    """
+        Función que itera en todos los valores de umbrales para obtener los estadísticos de cada una y poder pintar la matriz de confusión
+        y hacer el classification report.
+        :param Ruta: ruta al fichero con el que queremos trabajar
+
+        """
     archivos = []
     a = ruta
     for x in os.listdir(a):
@@ -225,18 +269,26 @@ def runFeaturealgoritmoEntero(ruta):
         TNL = 0
         cota = (j * 0.1)
         for i in archivos:
-            TP, TN, FP, FN = runEstadisticosConFeature(i, cota)
+            TP, TN, FP, FN = runEstadisticosConTF_IDF(i, cota)
             TPL += (len(TP))
             TNL += (len(TN))
             FPL += (len(FP))
             FNL += (len(FN))
         print("Con cota= " + str(cota) + " Aciertos= " + str(TPL + TNL) + " Errores= " + str(
             FPL + FNL) + " Total= " + str(FPL + FNL + TPL + TNL))
-        EstadisticosDeTodoLista(TPL, TNL, FPL, FNL, cota)
+        EstadisticosDeTodoLista(TPL, TNL, FPL, FNL)
 
 
 def runEstadisticosConTDIDF(ruta, cota, expected: list, predicted: list):
-    sentences, ValoresRespuestas = extraerRespuestasVEC(ruta)
+    """
+    Función complementaria para la obtención de los estadísticos usando TF_IDF.
+    :param Ruta: ruta al fichero con el que queremos trabajar.
+    :param cota: valor umbral de similitud.
+    :param expected: lista de los valores esperados.
+    :param predicted: lista de los valores predecidos.
+    :return: ambas listas ampliadas con los valores del nuevo fichero.
+    """
+    sentences, ValoresRespuestas = extraerRespuestasTF_IDF(ruta)
     buena = sentences[0]
 
     cont = 0
@@ -266,7 +318,15 @@ def runEstadisticosConTDIDF(ruta, cota, expected: list, predicted: list):
     return expected, predicted
 
 
-def runTFIDFlgoritmoEstadisticos(ruta, cota, expected, predicted):
+def runTFIDFalgoritmoEstadisticos(ruta, cota, expected, predicted):
+    """
+        Función complementaria para la obtención de los estadísticos usando TF_IDF.
+        :param Ruta: ruta al fichero con el que queremos trabajar.
+        :param cota: valor umbral de similitud.
+        :param expected: lista de los valores esperados.
+        :param predicted: lista de los valores predecidos.
+        :return: ambas listas ampliadas con los valores del nuevo fichero.
+        """
     archivos = []
 
     for x in os.listdir(ruta):
@@ -278,14 +338,25 @@ def runTFIDFlgoritmoEstadisticos(ruta, cota, expected, predicted):
     return expected, predicted
 
 
-def preprocesFlair(i):
-    frase = Sentence(i)
+def preprocesFlair(frase):
+    """
+
+    :param frase: frase que queremos preprocesar usando FLAIR.
+    :return: embedding de la frase.
+    """
+    frase = Sentence(frase)
     document_embedding.embed(frase)
-    b = frase.get_embedding()
-    return b
+    ret = frase.get_embedding()
+    return ret
 
 
-def ExtraerRespuestasFlair(ruta):
+def extraerRespuestasFlair(ruta):
+    """
+        Función para extraer las respuestas del fichero xml que queramos. Posteriormente se preprocesa y se transformará en un embedding con FLAIR.
+
+        :param ruta:  ruta al fichero del que extraer las respuestas
+        :return: lista de frases procesadas y transformadas junto a sus respectivos índices
+        """
     ValoresRespuestas = []
     fichero = ruta
     doc = minidom.parse(fichero)
@@ -313,7 +384,15 @@ def ExtraerRespuestasFlair(ruta):
 
 
 def runEstadisticosConFlairopcion2(ruta, cota, expected: list, predicted: list):
-    sentences, indicesRespuestas = ExtraerRespuestasFlair(ruta)
+    """
+        Función complementaria para la obtención de los estadísticos usando Flair.
+        :param ruta: ruta al fichero con el que queremos trabajar.
+        :param cota: valor umbral de similitud.
+        :param expected: lista de los valores esperados.
+        :param predicted: lista de los valores predecidos.
+        :return: ambas listas ampliadas con los valores del nuevo fichero.
+    """
+    sentences, indicesRespuestas = extraerRespuestasFlair(ruta)
 
     cont = 0
     for i in range(len(sentences) - 1):
@@ -344,7 +423,15 @@ def runEstadisticosConFlairopcion2(ruta, cota, expected: list, predicted: list):
     return expected, predicted
 
 
-def runFlairlgoritmoEstadisticos(ruta, cota, expected, predicted):
+def runFlairalgoritmoEstadisticos(ruta, cota, expected, predicted):
+    """
+        Función complementaria para la obtención de los estadísticos usando Flair.
+        :param ruta: ruta al fichero con el que queremos trabajar.
+        :param cota: valor umbral de similitud.
+        :param expected: lista de los valores esperados.
+        :param predicted: lista de los valores predecidos.
+        :return: ambas listas ampliadas con los valores del nuevo fichero.
+        """
     archivos = []
 
     for x in os.listdir(ruta):
@@ -359,7 +446,14 @@ def runFlairlgoritmoEstadisticos(ruta, cota, expected, predicted):
 
 
 def runEstadisticosConFlair(ruta, cota):
-    sentences, valoresRespuestas = ExtraerRespuestasFlair(ruta)
+    """
+        Función complementaria para la obtención de los estadísticos usando TF_IDF.
+        :param Ruta: ruta al fichero con el que queremos trabajar.
+        :param cota: valor umbral de similitud.
+
+        :return: listas de los estadísticos.
+        """
+    sentences, valoresRespuestas = extraerRespuestasFlair(ruta)
     FN = []
     TP = []
     FP = []
@@ -386,11 +480,16 @@ def runEstadisticosConFlair(ruta, cota):
     return TP, TN, FP, FN
 
 
-def runFLAIRalgoritmoEntero(RUTA):
+def runFLAIRalgoritmoEntero(ruta):
+    """
+    Función para iterar y obtener los estadísticos.
+    :param ruta: ruta del directorio que queremos procesar.
+
+    """
     archivos = []
-    a = RUTA
-    for directorio in os.listdir(a):
-        route = a + "/" + directorio
+
+    for directorio in os.listdir(ruta):
+        route = ruta + "/" + directorio
         archivos.append(route)
     for j in range(11):
         FNL = 0
@@ -409,7 +508,10 @@ def runFLAIRalgoritmoEntero(RUTA):
         EstadisticosDeTodoLista(TPL, TNL, FPL, FNL, cota)
 
 
-def EstadisticosDeTodoLista(TPL, TNL, FPL, FNL, cota):
+def EstadisticosDeTodoLista(TPL, TNL, FPL, FNL):
+    """
+    Función complementaria para pintar los estadísticos.
+    """
     print(str(TPL) + " " + str(TNL) + " " + str(FPL) + " " + str(FNL) + " ")
 
 
@@ -421,6 +523,11 @@ def mean_pooling(model_output, attention_mask):
 
 
 def huggingFaceTransformers(Sentences):
+    """
+    Función para obtener embeddings usando BERT.
+    :param Sentences: Frases que queremos procesar.
+    :return: lista de embeddings
+    """
     sentences = Sentences
     # Tokenize sentences
     encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
@@ -439,6 +546,12 @@ def huggingFaceTransformers(Sentences):
 
 
 def ExtraerRespuestasHuggingFace(ruta):
+    """
+        Función para extraer las respuestas del fichero xml que queramos. Posteriormente se preprocesa y se transformará en un embedding con BERT usando un transformador obtenido en HuggingFace.
+
+        :param ruta:  ruta al fichero del que extraer las respuestas
+        :return: lista de frases procesadas y transformadas junto a sus respectivos índices
+        """
     ValoresRespuestas = []
     fichero = ruta
     doc = minidom.parse(fichero)
@@ -465,6 +578,13 @@ def ExtraerRespuestasHuggingFace(ruta):
 
 
 def runEstadisticosConHF(ruta, cota):
+    """
+        Función complementaria para la obtención de los estadísticos usando BERT, usando un transformador obtenido de HuggingFace.
+        :param Ruta: ruta al fichero con el que queremos trabajar.
+        :param cota: valor umbral de similitud.
+
+        :return: listas de los estadísticos.
+        """
     sentences, ValoresRespuestas = ExtraerRespuestasHuggingFace(ruta)
     sentences = huggingFaceTransformers(sentences)
     FN = []
@@ -493,15 +613,22 @@ def runEstadisticosConHF(ruta, cota):
 
 
 def escribirResultados(resultados):
+    """
+    Función complementaria usada para escribir en un fichero en csv
+    """
     df = pd.DataFrame(resultados)
     df.to_csv("prueba.csv", index=False, header=False)
 
 
-def runHFalgoritmoEntero(RUTA):
+def runHFalgoritmoEntero(ruta):
+    """
+        Función para iterar y obtener los estadísticos.
+        :param ruta: ruta del directorio que queremos procesar.
+        """
+
     archivos = []
-    a = RUTA
-    for x in os.listdir(a):
-        route = a + "/" + x
+    for x in os.listdir(ruta):
+        route = ruta + "/" + x
         archivos.append(route)
     for j in range(11):
         FNL = 0
@@ -521,6 +648,9 @@ def runHFalgoritmoEntero(RUTA):
 
 
 def procesamientoBert(respuestas):
+    """
+    Función que preprocesa frases usando BERT.
+    """
     ValoresRespuestas = []
     Frases = []
 
@@ -535,6 +665,9 @@ def procesamientoBert(respuestas):
 
 
 def obtenerFrases(ruta):
+    """
+    Función para obtener las frases de un fichero csv
+    """
     file_name = ruta
     frases = []
     with open(file_name, "r") as csv_file:
@@ -549,61 +682,88 @@ def obtenerFrases(ruta):
         print("salgo")
     return frases
 
-
-if __name__ == "__main__":
-    # runOpenai()
-    # runTSNEopenai()
-    # runTSNE()
-    # runPruebaProbabilidad()
-    # runPruebaProbabilidadConTruncatedSVD()
-    # runEstadisticosConFlair("./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml")
-    # listaAc,listaErr= runFLAIRalgoritmoEntero()
-    # runFLAIRalgoritmoEntero()
-    for i in range(8):
-        cota = i * 0.1 + 0.2
+def ejecutarAlgoritmoFlair():
+    for i in range(11):
+        cota = i * 0.1
         expected = []
         predicted = []
-        expected, predicted = runFlairlgoritmoEstadisticos(
+        expected, predicted = runFlairalgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers",
             cota, expected, predicted)
-        expected, predicted = runFlairlgoritmoEstadisticos(
+        expected, predicted = runFlairalgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains",
             cota, expected, predicted)
-        expected, predicted = runFlairlgoritmoEstadisticos(
+        expected, predicted = runFlairalgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions",
             cota, expected, predicted)
-        expected, predicted = runFlairlgoritmoEstadisticos(
+        expected, predicted = runFlairalgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions",
             cota, expected, predicted)
-        expected, predicted = runFlairlgoritmoEstadisticos(
+        expected, predicted = runFlairalgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers",
             cota, expected, predicted)
-        print(cota)
+        print("Cota: " + str(cota))
+        print("Matriz de confusión")
         print(confusion_matrix(expected, predicted))
+        print("Classification report")
         print(classification_report(expected, predicted))
-    exit()
-    """print("ANSWERS")
-    runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers")
-    print("QUESTIONS")
-    runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions")"""
-    # print("ANSWERS")
-    # runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions")
-    # runFLAIRalgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers")
-    # print("QUESTIONS")
-    # runFLAIRalgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions")
 
-    print("QUESTIONS SCB")
-    runHFalgoritmoEntero(
-        "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions")
-    print("answers SCB")
-    runHFalgoritmoEntero(
-        "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers")
-    print("Domains SCB")
-    runHFalgoritmoEntero(
-        "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains")
-    print("QUESTIONS BT")
-    runHFalgoritmoEntero(
-        "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions")
-    print("ANSWERS BT")
-    runHFalgoritmoEntero(
-        "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers")
+def ejecutarAlgoritmoBert():
+    for i in range(11):
+        cota = i * 0.1
+        expected = []
+        predicted = []
+        expected, predicted = runEstadisticosConBERTopcion2(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers",
+            cota, expected, predicted)
+        expected, predicted = runEstadisticosConBERTopcion2(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains",
+            cota, expected, predicted)
+        expected, predicted = runEstadisticosConBERTopcion2(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions",
+            cota, expected, predicted)
+        expected, predicted = runEstadisticosConBERTopcion2(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions",
+            cota, expected, predicted)
+        expected, predicted = runEstadisticosConBERTopcion2(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers",
+            cota, expected, predicted)
+        print("Cota: " + str(cota))
+        print("Matriz de confusión")
+        print(confusion_matrix(expected, predicted))
+        print("Classification report")
+        print(classification_report(expected, predicted))
+
+def ejecutarAlgoritmoTF_IDF():
+    for i in range(11):
+        cota = i * 0.1
+        expected = []
+        predicted = []
+        expected, predicted = runTFIDFalgoritmoEstadisticos(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers",
+            cota, expected, predicted)
+        expected, predicted = runTFIDFalgoritmoEstadisticos(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains",
+            cota, expected, predicted)
+        expected, predicted = runTFIDFalgoritmoEstadisticos(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions",
+            cota, expected, predicted)
+        expected, predicted = runTFIDFalgoritmoEstadisticos(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions",
+            cota, expected, predicted)
+        expected, predicted = runTFIDFalgoritmoEstadisticos(
+            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers",
+            cota, expected, predicted)
+        print("Cota: "+ str(cota))
+        print("Matriz de confusión")
+        print(confusion_matrix(expected, predicted))
+        print("Classification report")
+        print(classification_report(expected, predicted))
+
+if __name__ == "__main__":
+
+    ejecutarAlgoritmoTF_IDF()
+    #ejecutarAlgoritmoFlair()
+    #ejecutarAlgoritmoBert()
+    exit()
+
