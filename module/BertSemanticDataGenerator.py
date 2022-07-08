@@ -92,7 +92,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 if __name__ == '__main__':
 
     #take csvs
-    train_df = pd.read_csv("../dataset.csv")
+    train_df = pd.read_csv("../ficheros/dataset.csv")
 
     train_df["label"] = train_df["similarity"].apply(
         lambda x: 0 if x == 0 else 1
