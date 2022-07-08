@@ -146,7 +146,7 @@ if __name__ == '__main__':
         # Applying hybrid pooling approach to bi_lstm sequence output.
         avg_pool = tf.keras.layers.GlobalAveragePooling1D()(bi_lstm)
         max_pool = tf.keras.layers.GlobalMaxPooling1D()(bi_lstm)
-        concat = tf.keras.layers.concatenate([avg_pool, max_pool])
+        concat = tf.kerasmodel = tf.keras.models.Model.layers.concatenate([avg_pool, max_pool])
         dropout = tf.keras.layers.Dropout(0.3)(concat)
         output = tf.keras.layers.Dense(2, activation="softmax")(dropout)
         model = tf.keras.models.Model(
@@ -198,8 +198,8 @@ if __name__ == '__main__':
         epochs=epochs,
         use_multiprocessing=True,
         workers=-1,
-    )
-"""
+    )"""
+
     test_data = BertSemanticDataGenerator(
         test_df[["sentence1", "sentence2"]].values.astype("str"),
         y_test,

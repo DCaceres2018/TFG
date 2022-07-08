@@ -41,83 +41,8 @@ import torch.nn.functional as torchFunc
 
 import csv
 
-
-def runPruebaProbabilidad():
-    listaNumeros = []
-    ValoresRespuestas = []
-    fichero = "./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml"
-
-    doc = minidom.parse(fichero)
-
-    question = doc.getElementsByTagName("questionText")[0]
-    respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
-    buena = respuestaBuena.firstChild.data
-    respuestasDadas = doc.getElementsByTagName("studentAnswer")
-    respuestas = []
-    respuestas.append(buena)
-    for i in respuestasDadas:
-        ValoresRespuestas.append(i.getAttribute('accuracy'))
-    ValoresRespuestas.append('base')
-
-    for i in range(len(respuestasDadas)):
-        respuestas.append(respuestasDadas[i].firstChild.data)
-
-    respDadas = []
-    respDadas = f.featureExtraction(respuestas)
-    respuestas = []
-    emb = tsne.tsne_fit(respDadas)
-    print(emb[0])
-    [x, y, z] = np.transpose(emb)
-    list = ['y', 'r', 'r', 'r', 'r', 'b', 'b', 'b', 'b', 'g', 'g', 'g', 'k', ]
-    fig = plt.figure()
-    grafica = fig.add_subplot(111, projection="3d")
-    grafica.scatter(x, y, z, marker='o', c=list)
-    """for i in range(len(emb)):
-        plt.plot(emb[i,0],emb[i,1],color=list[i],marker='o')"""
-    plt.show()
-
-
-def runPruebaProbabilidadConTruncatedSVD():
-    listaNumeros = []
-    ValoresRespuestas = []
-    fichero = "./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml"
-
-    doc = minidom.parse(fichero)
-
-    question = doc.getElementsByTagName("questionText")[0]
-    respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
-    buena = respuestaBuena.firstChild.data
-    respuestasDadas = doc.getElementsByTagName("studentAnswer")
-    respuestas = []
-    respuestas.append(buena)
-    for i in respuestasDadas:
-        ValoresRespuestas.append(i.getAttribute('accuracy'))
-    ValoresRespuestas.append('base')
-
-    for i in range(len(respuestasDadas)):
-        respuestas.append(respuestasDadas[i].firstChild.data)
-
-    respDadas = []
-    resp = openai.Embedding.create(
-        input=respuestas,
-        engine="text-similarity-babbage-001")
-
-    embeding = []
-    for cont in range(len(respuestas)):
-        embeding.append(resp['data'][cont]['embedding'])
-    respuestas = []
-    trun = TruncatedSVD(n_components=len(embeding), n_iter=7, random_state=42)
-    x_tr = trun.fit(embeding)
-    print(trun.explained_variance_ratio_)
-    """emb = tsne.tsne_fit(respDadas)"""
-    """[x, y, z] = np.transpose(x_tr)"""
-    """list=['y','r','r','r','r','b','b','b','b','g','g','g','k',]
-    fig = plt.figure()
-    grafica = fig.add_subplot(111, projection="3d")
-    grafica.scatter(x, y, z, marker='o', c=list)
-    for i in range(len(emb)):
-        plt.plot(emb[i,0],emb[i,1],color=list[i],marker='o')
-    plt.show()"""
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 
 def extraerRespuestasBERT(ruta):
@@ -154,9 +79,9 @@ def runEstadisticosConBERT(ruta, cota):
     cont = 0
     buena = respDadas[0]
     for i in respDadas:
-        if (cont != 0):
+        if cont != 0:
             valor = 1 - cosine(buena, i)
-            if (valor < 0):
+            if valor < 0:
                 print(valor)
             accuracy = ValoresRespuestas[cont - 1]
             if valor > cota:
@@ -180,9 +105,9 @@ def runEstadisticosConBERTopcion2(ruta, cota, expected: list, predicted: list):
     cont = 0
     buena = respDadas[0]
     for i in respDadas:
-        if (cont != 0):
+        if cont != 0:
             valor = 1 - cosine(buena, i)
-            if (valor < 0):
+            if valor < 0:
                 print(valor)
             accuracy = ValoresRespuestas[cont - 1]
             if valor > cota:
@@ -202,10 +127,6 @@ def runEstadisticosConBERTopcion2(ruta, cota, expected: list, predicted: list):
         cont += 1
 
     return expected, predicted
-
-
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
 
 
 def runBertlgoritmoEntero(Ruta):
@@ -241,24 +162,21 @@ def runBertlgoritmoEstadisticos(Ruta, cota, expected, predicted):
 
 def extraerRespuestasVEC(ruta):
     fichero = ruta
-    respuestasDadad = []
     ValoresRespuestas = []
-    sentences = []
     respuestas = []
 
     doc = minidom.parse(fichero)
 
-    question = doc.getElementsByTagName("questionText")[0]
     respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
-    buena = respuestaBuena.firstChild.data
+    respuestaBuena = respuestaBuena.firstChild.data
     respuestasDadas = doc.getElementsByTagName("studentAnswer")
 
-    respuestas.append(buena)
+    respuestas.append(respuestaBuena)
 
-    for i in respuestasDadas:
-        ValoresRespuestas.append(i.getAttribute('accuracy'))
-    for i in range(len(respuestasDadas)):
-        respuestas.append(respuestasDadas[i].firstChild.data)
+    for respuesta in respuestasDadas:
+        ValoresRespuestas.append(respuesta.getAttribute('accuracy'))
+    for cont in range(len(respuestasDadas)):
+        respuestas.append(respuestasDadas[cont].firstChild.data)
 
     respDadas = f.featureExtraction(respuestas)
     return respDadas, ValoresRespuestas
@@ -272,10 +190,10 @@ def runEstadisticosConFeature(ruta, cota):
     TN = []
     cont = 0
     buena = respDadas[0]
-    for i in respDadas:
-        if (cont != 0):
-            valor = f.get_cosine_similarity(buena, i)
-            if (valor < 0):
+    for respuesta in respDadas:
+        if cont != 0:
+            valor = f.get_cosine_similarity(buena, respuesta)
+            if valor < 0:
                 print(valor)
             accuracy = ValoresRespuestas[cont - 1]
             if valor > cota:
@@ -299,11 +217,8 @@ def runFeaturealgoritmoEntero(ruta):
     for x in os.listdir(a):
         route = a + "/" + x
         archivos.append(route)
-    ListaAciertosTotal = []
-    ListaErroresTotal = []
+
     for j in range(11):
-        numErrores = 0
-        numAciertos = 0
         FNL = 0
         TPL = 0
         FPL = 0
@@ -318,6 +233,49 @@ def runFeaturealgoritmoEntero(ruta):
         print("Con cota= " + str(cota) + " Aciertos= " + str(TPL + TNL) + " Errores= " + str(
             FPL + FNL) + " Total= " + str(FPL + FNL + TPL + TNL))
         EstadisticosDeTodoLista(TPL, TNL, FPL, FNL, cota)
+
+
+def runEstadisticosConTDIDF(ruta, cota, expected: list, predicted: list):
+    sentences, ValoresRespuestas = extraerRespuestasVEC(ruta)
+    buena = sentences[0]
+
+    cont = 0
+    for im in sentences:
+        if cont != 0:
+            valor = f.get_cosine_similarity(buena, im)
+            # Distance2=distance.euclidean(sentences[0],sentences[i+1])
+            accuracy = ValoresRespuestas[cont - 1]
+            if valor > cota:
+                if accuracy == 'correct':
+                    expected.append(1)
+                    predicted.append(1)
+                else:
+                    expected.append(0)
+                    predicted.append(1)
+            else:
+                if accuracy == 'correct':
+                    expected.append(1)
+                    predicted.append(0)
+                else:
+                    expected.append(0)
+                    predicted.append(0)
+            cont += 1
+        else:
+            cont += 1
+
+    return expected, predicted
+
+
+def runTFIDFlgoritmoEstadisticos(ruta, cota, expected, predicted):
+    archivos = []
+
+    for x in os.listdir(ruta):
+        route = ruta + "/" + x
+        archivos.append(route)
+    for i in archivos:
+        expected, predicted = runEstadisticosConTDIDF(i, cota, expected, predicted)
+
+    return expected, predicted
 
 
 def preprocesFlair(i):
@@ -355,41 +313,42 @@ def ExtraerRespuestasFlair(ruta):
 
 
 def runEstadisticosConFlairopcion2(ruta, cota, expected: list, predicted: list):
-    sentences, ValoresRespuestas = ExtraerRespuestasFlair(ruta)
+    sentences, indicesRespuestas = ExtraerRespuestasFlair(ruta)
 
     cont = 0
     for i in range(len(sentences) - 1):
-            if sentences[i + 1] != []:
-                Distance = 1 - cosine(sentences[0].cpu().numpy(), sentences[i + 1].cpu().numpy())
-                # Distance2=distance.euclidean(sentences[0],sentences[i+1])
-                valor = Distance
-                accuracy = ValoresRespuestas[i]
+        if sentences[i + 1] != []:
+            Distance = 1 - cosine(sentences[0].cpu().numpy(), sentences[i + 1].cpu().numpy())
+            # Distance2=distance.euclidean(sentences[0],sentences[i+1])
+            valor = Distance
+            accuracy = indicesRespuestas[i]
+        else:
+            valor = 0
+            accuracy = indicesRespuestas[i]
+        if valor > cota:
+            if accuracy == 'correct':
+                expected.append(1)
+                predicted.append(1)
             else:
-                valor = 0
-                accuracy = ValoresRespuestas[i]
-            if valor > cota:
-                if accuracy == 'correct':
-                    expected.append(1)
-                    predicted.append(1)
-                else:
-                    expected.append(0)
-                    predicted.append(1)
+                expected.append(0)
+                predicted.append(1)
+        else:
+            if accuracy == 'correct':
+                expected.append(1)
+                predicted.append(0)
             else:
-                if accuracy == 'correct':
-                    expected.append(1)
-                    predicted.append(0)
-                else:
-                    expected.append(0)
-                    predicted.append(0)
-            cont += 1
+                expected.append(0)
+                predicted.append(0)
+        cont += 1
 
     return expected, predicted
 
-def runFlairlgoritmoEstadisticos(Ruta, cota, expected, predicted):
+
+def runFlairlgoritmoEstadisticos(ruta, cota, expected, predicted):
     archivos = []
 
-    for x in os.listdir(Ruta):
-        route = Ruta + "/" + x
+    for x in os.listdir(ruta):
+        route = ruta + "/" + x
         archivos.append(route)
     Expected = expected
     Predicted = predicted
@@ -398,8 +357,9 @@ def runFlairlgoritmoEstadisticos(Ruta, cota, expected, predicted):
 
     return Expected, Predicted
 
+
 def runEstadisticosConFlair(ruta, cota):
-    sentences, ValoresRespuestas = ExtraerRespuestasFlair(ruta)
+    sentences, valoresRespuestas = ExtraerRespuestasFlair(ruta)
     FN = []
     TP = []
     FP = []
@@ -409,10 +369,10 @@ def runEstadisticosConFlair(ruta, cota):
             Distance = 1 - cosine(sentences[0].cpu().numpy(), sentences[i + 1].cpu().numpy())
             # Distance2=distance.euclidean(sentences[0],sentences[i+1])
             valor = Distance
-            accuracy = ValoresRespuestas[i]
+            accuracy = valoresRespuestas[i]
         else:
             valor = 0
-            accuracy = ValoresRespuestas[i]
+            accuracy = valoresRespuestas[i]
         if valor > cota:
             if accuracy == 'correct':
                 TP.append(valor)
@@ -429,14 +389,10 @@ def runEstadisticosConFlair(ruta, cota):
 def runFLAIRalgoritmoEntero(RUTA):
     archivos = []
     a = RUTA
-    for x in os.listdir(a):
-        route = a + "/" + x
+    for directorio in os.listdir(a):
+        route = a + "/" + directorio
         archivos.append(route)
-    ListaAciertosTotal = []
-    ListaErroresTotal = []
     for j in range(11):
-        numErrores = 0
-        numAciertos = 0
         FNL = 0
         TPL = 0
         FPL = 0
@@ -455,14 +411,7 @@ def runFLAIRalgoritmoEntero(RUTA):
 
 def EstadisticosDeTodoLista(TPL, TNL, FPL, FNL, cota):
     print(str(TPL) + " " + str(TNL) + " " + str(FPL) + " " + str(FNL) + " ")
-    totalEncontrados = 0
-    totalTodos = 0
-    """precision=TP/(TP+FP)
-        recall=TP/(TP+FN)
-        f1=(recall+precision)/2
-        Accuracy=(TP+TN)/(TP+TN+FP+FN)
-        print("Con cota= "+str(round(cota,2))+" .Precision= "+str(round(precision,3))+" Recall= "+str(round(recall,3))+" F1= "+str(round(f1,3))+" Accuracy= "+str(round(Accuracy,3)))
-"""
+
 
 
 def mean_pooling(model_output, attention_mask):
@@ -505,11 +454,11 @@ def ExtraerRespuestasHuggingFace(ruta):
     for i in range(len(respuestasDadas)):
         respuestas.append(respuestasDadas[i].firstChild.data)
 
-    entrada = [f.pre_process(i) for i in respuestas]
+    frasesPreprocesadas = [f.pre_process(i) for i in respuestas]
     sentences = []
-    for i in entrada:
-        if i != "":
-            sentences.append(i)
+    for frase in frasesPreprocesadas:
+        if frase != "":
+            sentences.append(frase)
         else:
             sentences.append("")
     return sentences, ValoresRespuestas
@@ -525,7 +474,6 @@ def runEstadisticosConHF(ruta, cota):
     for i in range(len(sentences) - 1):
         if sentences[i + 1] != []:
             Distance = 1 - cosine(sentences[0].cpu().numpy(), sentences[i + 1].cpu().numpy())
-            # Distance2=distance.euclidean(sentences[0],sentences[i+1])
             valor = Distance
             accuracy = ValoresRespuestas[i]
         else:
@@ -555,11 +503,7 @@ def runHFalgoritmoEntero(RUTA):
     for x in os.listdir(a):
         route = a + "/" + x
         archivos.append(route)
-    ListaAciertosTotal = []
-    ListaErroresTotal = []
     for j in range(11):
-        numErrores = 0
-        numAciertos = 0
         FNL = 0
         TPL = 0
         FPL = 0
@@ -600,7 +544,6 @@ def obtenerFrases(ruta):
         for row in csv_reader:
             if cont == 0:
                 cont += 1
-                cabecera = row
             else:
                 frases.append(row)
         print("salgo")
@@ -616,16 +559,16 @@ if __name__ == "__main__":
     # runEstadisticosConFlair("./sciEntsBank/test-unseen-answers/EM-inv1-45b.xml")
     # listaAc,listaErr= runFLAIRalgoritmoEntero()
     # runFLAIRalgoritmoEntero()
-    for i in range(11):
-        cota = i*0.1
+    for i in range(8):
+        cota = i * 0.1 + 0.2
         expected = []
         predicted = []
         expected, predicted = runFlairlgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers",
-            cota,expected,predicted)
+            cota, expected, predicted)
         expected, predicted = runFlairlgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains",
-            cota,expected,predicted)
+            cota, expected, predicted)
         expected, predicted = runFlairlgoritmoEstadisticos(
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions",
             cota, expected, predicted)
@@ -636,8 +579,8 @@ if __name__ == "__main__":
             "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers",
             cota, expected, predicted)
         print(cota)
-        print(confusion_matrix(expected,predicted))
-        print(classification_report(expected,predicted))
+        print(confusion_matrix(expected, predicted))
+        print(classification_report(expected, predicted))
     exit()
     """print("ANSWERS")
     runFeaturealgoritmoEntero("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers")
