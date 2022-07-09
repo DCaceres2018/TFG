@@ -91,13 +91,23 @@ def runEstadisticosConBERT(ruta, cota):
             if valor > cota:
                 if accuracy == 'correct':
                     TP.append(valor)
-                else:
+                if accuracy == 'incorrect':
                     FP.append(valor)
+                else:
+                    if valor - cota > 0.1:
+                        TP.append(valor)
+                    else:
+                        FP.append(valor)
             else:
                 if accuracy == 'correct':
                     FN.append(valor)
-                else:
+                if accuracy == 'incorrect':
                     TN.append(valor)
+                else:
+                    if valor - cota > 0.1:
+                        FP.append(valor)
+                    else:
+                        TN.append(valor)
         cont += 1
 
     return TP, TN, FP, FN
@@ -237,13 +247,23 @@ def runEstadisticosConTF_IDF(ruta, cota):
             if valor > cota:
                 if accuracy == 'correct':
                     TP.append(valor)
-                else:
+                if accuracy == 'incorrect':
                     FP.append(valor)
+                else:
+                    if valor - cota > 0.1:
+                        TP.append(valor)
+                    else:
+                        FP.append(valor)
             else:
                 if accuracy == 'correct':
                     FN.append(valor)
-                else:
+                if accuracy == 'incorrect':
                     TN.append(valor)
+                else:
+                    if valor - cota > 0.1:
+                        FP.append(valor)
+                    else:
+                        TN.append(valor)
         cont += 1
 
     return TP, TN, FP, FN
@@ -470,13 +490,23 @@ def runEstadisticosConFlair(ruta, cota):
         if valor > cota:
             if accuracy == 'correct':
                 TP.append(valor)
-            else:
+            if accuracy == 'incorrect':
                 FP.append(valor)
+            else:
+                if valor - cota > 0.1:
+                    TP.append(valor)
+                else:
+                    FP.append(valor)
         else:
             if accuracy == 'correct':
                 FN.append(valor)
-            else:
+            if accuracy == 'incorrect':
                 TN.append(valor)
+            else:
+                if valor - cota > 0.1:
+                    FP.append(valor)
+                else:
+                    TN.append(valor)
     return TP, TN, FP, FN
 
 
