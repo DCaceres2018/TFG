@@ -91,23 +91,14 @@ def runEstadisticosConBERT(ruta, cota):
             if valor > cota:
                 if accuracy == 'correct':
                     TP.append(valor)
-                if accuracy == 'incorrect':
-                    FP.append(valor)
                 else:
-                    if valor - cota > 0.1:
-                        TP.append(valor)
-                    else:
-                        FP.append(valor)
+                    FP.append(valor)
             else:
                 if accuracy == 'correct':
                     FN.append(valor)
-                if accuracy == 'incorrect':
-                    TN.append(valor)
                 else:
-                    if valor - cota > 0.1:
-                        FP.append(valor)
-                    else:
-                        TN.append(valor)
+                    TN.append(valor)
+
         cont += 1
 
     return TP, TN, FP, FN
@@ -162,13 +153,16 @@ def runBertalgoritmoEntero(Ruta):
     for x in os.listdir(Ruta):
         route = Ruta + "/" + x
         archivos.append(route)
+
     for j in range(11):
         expected = []
         predicted = []
         cota = (j * 0.1)
         for i in archivos:
             expected, predicted = runEstadisticosConBERTopcion2(i, cota, expected, predicted)
-
+            print("--------")
+            print(expected)
+            print(predicted)
         print(classification_report(expected, predicted))
         print(confusion_matrix(expected, predicted))
 
@@ -247,23 +241,13 @@ def runEstadisticosConTF_IDF(ruta, cota):
             if valor > cota:
                 if accuracy == 'correct':
                     TP.append(valor)
-                if accuracy == 'incorrect':
-                    FP.append(valor)
                 else:
-                    if valor - cota > 0.1:
-                        TP.append(valor)
-                    else:
-                        FP.append(valor)
+                    FP.append(valor)
             else:
                 if accuracy == 'correct':
                     FN.append(valor)
-                if accuracy == 'incorrect':
-                    TN.append(valor)
                 else:
-                    if valor - cota > 0.1:
-                        FP.append(valor)
-                    else:
-                        TN.append(valor)
+                    TN.append(valor)
         cont += 1
 
     return TP, TN, FP, FN
@@ -490,23 +474,13 @@ def runEstadisticosConFlair(ruta, cota):
         if valor > cota:
             if accuracy == 'correct':
                 TP.append(valor)
-            if accuracy == 'incorrect':
-                FP.append(valor)
             else:
-                if valor - cota > 0.1:
-                    TP.append(valor)
-                else:
-                    FP.append(valor)
+                FP.append(valor)
         else:
             if accuracy == 'correct':
                 FN.append(valor)
-            if accuracy == 'incorrect':
-                TN.append(valor)
             else:
-                if valor - cota > 0.1:
-                    FP.append(valor)
-                else:
-                    TN.append(valor)
+                TN.append(valor)
     return TP, TN, FP, FN
 
 
@@ -739,30 +713,29 @@ def ejecutarAlgoritmoFlair():
         print(classification_report(expected, predicted))
 
 def ejecutarAlgoritmoBert():
-    for i in range(11):
-        cota = i * 0.1
-        expected = []
-        predicted = []
-        expected, predicted = runEstadisticosConBERTopcion2(
-            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers",
-            cota, expected, predicted)
-        expected, predicted = runEstadisticosConBERTopcion2(
-            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains",
-            cota, expected, predicted)
-        expected, predicted = runEstadisticosConBERTopcion2(
-            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions",
-            cota, expected, predicted)
-        expected, predicted = runEstadisticosConBERTopcion2(
-            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions",
-            cota, expected, predicted)
-        expected, predicted = runEstadisticosConBERTopcion2(
-            "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers",
-            cota, expected, predicted)
-        print("Cota: " + str(cota))
-        print("Matriz de confusión")
-        print(confusion_matrix(expected, predicted))
-        print("Classification report")
-        print(classification_report(expected, predicted))
+        archivos=[]
+        for i in os.listdir( "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers"):
+            archivos.append("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-answers/"+i)
+        for i in os.listdir( "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions"):
+            archivos.append("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-questions/"+i)
+        for i in os.listdir( "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains"):
+            archivos.append("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/sciEntsBank/test-unseen-domains/"+i)
+        for i in os.listdir( "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions"):
+            archivos.append("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-questions/"+i)
+        for i in os.listdir( "score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers"):
+            archivos.append("score-freetext-answer-master/src/main/resources/corpus/semeval2013-task7/test/2way/beetle/test-unseen-answers/"+i)
+
+        for j in range(11):
+            expected = []
+            predicted = []
+            cota = (j * 0.1)
+            for i in archivos:
+                expected, predicted = runEstadisticosConBERTopcion2(i, cota, expected, predicted)
+
+            print(classification_report(expected, predicted))
+            print(confusion_matrix(expected, predicted))
+
+
 
 def ejecutarAlgoritmoTF_IDF():
     for i in range(11):
@@ -792,8 +765,8 @@ def ejecutarAlgoritmoTF_IDF():
 
 if __name__ == "__main__":
 
-    ejecutarAlgoritmoTF_IDF()
-    #ejecutarAlgoritmoFlair()
+    #ejecutarAlgoritmoTF_IDF()
+    ejecutarAlgoritmoFlair()
     #ejecutarAlgoritmoBert()
-    exit()
+
 
