@@ -763,10 +763,49 @@ def ejecutarAlgoritmoTF_IDF():
         print("Classification report")
         print(classification_report(expected, predicted))
 
-if __name__ == "__main__":
+def extraerFrases(archivo):
+    fichero = archivo
+    ValoresRespuestas = []
+    respuestas = []
 
+    doc = minidom.parse(fichero)
+
+    respuestaBuena = doc.getElementsByTagName("referenceAnswer")[0]
+    respuestaBuena = respuestaBuena.firstChild.data
+    respuestasDadas = doc.getElementsByTagName("studentAnswer")
+
+    respuestas.append(respuestaBuena)
+
+    for i in respuestasDadas:
+        ValoresRespuestas.append(i.getAttribute('accuracy'))
+    for i in range(len(respuestasDadas)):
+        respuestas.append(respuestasDadas[i].firstChild.data)
+
+
+
+    return respuestas, ValoresRespuestas
+
+def runDemo(archivo,cota):
+    vectorA,vectorB=extraerRespuestasBERT(archivo)
+    frases,referencias=extraerFrases(archivo)
+    cont=0
+    for i in vectorA:
+        if cont != 0:
+            valor = 1 - cosine(vectorA[0], i)
+            if valor >= cota:
+                print(frases[0]+" -> "+frases[cont]+" predecimos que son similares con una similitud de "+str(valor))
+            else:
+                print(frases[0] + " -> " + frases[cont] + " predecimos que son distintas con una similitud de "+str(valor))
+            if vectorB[cont-1] == "correct":
+                print("Estas frases realmente son similares")
+            else:
+                print("Estas frases realmente son distintas")
+        cont += 1
+
+if __name__ == "__main__":
+    runDemo("./Demo.xml",0.7)
     #ejecutarAlgoritmoTF_IDF()
-    ejecutarAlgoritmoFlair()
+    #ejecutarAlgoritmoFlair()
     #ejecutarAlgoritmoBert()
 
 
